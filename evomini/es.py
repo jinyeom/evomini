@@ -40,8 +40,12 @@ class Evaluator:
   def _build_model(self):
     raise NotImplementedError
 
-  def _evaluate(self, env, model):
+  def _evaluate_once(self, env, model):
     raise NotImplementedError
+
+  def _evaluate(self, env, model):
+    fitness = [self._evaluate_once(env, model) for _ in range(self.num_evals)]
+    return np.mean(fitness)
 
   def _worker(self, rank, pipe, parent_pipe):
     parent_pipe.close()
