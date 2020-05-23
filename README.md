@@ -1,5 +1,5 @@
 # evomini
-A minimal implementation of Neuroevolution. Have you heard of [micrograd](https://github.com/karpathy/micrograd)? It's that, but for evolving neural networks.
+A minimal implementation of Neuroevolution algorithms.
 
 ## Requirements
 - NumPy
