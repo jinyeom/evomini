@@ -1,6 +1,6 @@
 import argparse
 import numpy as np
-from evomini.es import Evaluator, OpenES
+from evomini.es import Evaluator, OpenaiES
 from evomini.nn import Module, Linear, LSTM
 from cartpole_swingup import CartPoleSwingUpEnv
 
@@ -60,13 +60,12 @@ class CartPoleSwingUpEvaluator(Evaluator):
 env = CartPoleSwingUpEnv()
 model = Model(5, 1, 16)
 mu_init = np.zeros(len(model))
-es = OpenES(mu_init,
-            sigma_init=args.sigma_init,
-            sigma_decay=args.sigma_decay,
-            sigma_limit=args.sigma_limit,
-            antithetic=args.antithetic,
-            stepsize=args.stepsize,
-            momentum=args.momentum)
+es = OpenaiES(mu_init,
+              sigma_init=args.sigma_init,
+              sigma_decay=args.sigma_decay,
+              sigma_limit=args.sigma_limit,
+              antithetic=args.antithetic,
+              stepsize=args.stepsize)
 global_best_fitness = -np.inf
 
 with CartPoleSwingUpEvaluator(args.num_workers,
