@@ -82,21 +82,25 @@ class Evaluator:
     _, success = zip(*[pipe.recv() for pipe in self.pipes])
     return all(success)
 
-class OpenES:
+class OpenaiES:
   def __init__(self, mu_init,
                sigma_init=0.1,
                sigma_decay=0.0001,
                sigma_limit=0.01,
                antithetic=True,
                stepsize=0.01,
-               momentum=0.9):
+               beta1=0.99,
+               beta2=0.999):
     self.mu = mu_init
     self.sigma = sigma_init
     self.sigma_decay = sigma_decay
     self.sigma_limit = sigma_limit
     self.antithetic = antithetic
     self.stepsize = stepsize
-    self.momentum = momentum
+    self.beta1 = beta1
+    self.beta2 = beta2
+    self.t = 0
+    self.m = np.zeros_like(self.mu)
     self.v = np.zeros_like(self.mu)
     self.epsilon = None
 
@@ -120,6 +124,12 @@ class OpenES:
     fitness = (rank - np.mean(rank)) / np.std(rank)
     grad = 1 / (popsize * self.sigma) * (self.epsilon.T @ fitness)
     self.sigma = max(self.sigma * (1 - self.sigma_decay), self.sigma_limit)
-    # gradient ascent with momentum
-    self.v = self.momentum * self.v + (1 - self.momentum) * grad
-    self.mu += self.stepsize * self.v
+    # gradient ascent with Adam
+    self.t += 1
+    self.m = self.beta1 * self.m + (1 - self.beta1) * grad
+    self.v = self.beta2 * self.v + (1 - self.beta2) * grad ** 2
+    a = self.stepsize * np.sqrt(1 - self.beta2 ** self.t) / (1 - self.beta1 ** self.t)
+    step = a * self.m / (np.sqrt(self.v) + 1e-8)
+    ratio = np.linalg.norm(step) / (np.linalg.norm(self.mu) + 1e-8)
+    self.mu += step
+    return ratio

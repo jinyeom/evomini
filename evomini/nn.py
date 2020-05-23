@@ -95,3 +95,61 @@ class LSTM(Module):
     self.c = f * self.c + i * c
     self.h = o * np.tanh(self.c)
     return np.array(self.h)
+
+class ENTM(Module):
+  def __init__(self, input_size, hidden_size, mem_size):
+    super().__init__()
+    self.input_size = input_size
+    self.hidden_size = hidden_size
+    self.mem_size = mem_size
+    self.register_module("controller", LSTM(input_size + mem_size, hidden_size))
+    self.register_module("write_vec", Linear(hidden_size, mem_size))
+    self.register_module("write_interp", Linear(hidden_size, 1))
+    self.register_module("content_jump", Linear(hidden_size, 1))
+    self.register_module("shift", Linear(hidden_size, 3))
+    self.reset()
+
+  def reset(self):
+    self.memory = np.zeros((1, self.mem_size))
+    self.head = 0
+    self.M_h = self.memory[self.head]
+    return self.controller.reset()
+
+  def _write(self, h):
+    a = self.write_vec(h)
+    w = sigmoid(self.write_interp(h))
+    M_h = (1 - w) * self.M_h + w * a
+    self.memory[self.head] = M_h
+    return a, w
+
+  def _content_jump(self, h, a):
+    j = sigmoid(self.content_jump(h))
+    if j > 0.5:
+      dist = np.sqrt(np.sum((self.memory - a) ** 2, axis=1))
+      self.head = int(np.argmin(dist))
+    return j
+
+  def _shift(self, h):
+    s = softmax(self.shift(h))
+    self.head += np.argmax(s) - 1
+    if self.head < 0:
+      mem_ext = np.zeros((1, self.mem_size,))
+      self.memory = np.concatenate([mem_ext, self.memory], axis=0)
+      self.head = 0
+    elif self.head >= self.memory.shape[0]:
+      mem_ext = np.zeros((1, self.mem_size,))
+      self.memory = np.concatenate([self.memory, mem_ext], axis=0)
+    return s
+
+  def _read(self):
+    self.M_h = self.memory[self.head]
+    return np.array(self.M_h)
+
+  def __call__(self, x):
+    x = np.concatenate([x, self.M_h])
+    h = self.controller(x)
+    a, w = self._write(h)
+    j = self._content_jump(h, a)
+    s = self._shift(h)
+    M_h = self._read()
+    return h
