@@ -7,11 +7,10 @@ from cartpole_swingup import CartPoleSwingUpEnv
 parser = argparse.ArgumentParser()
 parser.add_argument("--artifact-path", type=str, default="artifacts/")
 parser.add_argument("--seed", type=int, default=0)
-parser.add_argument("--desc", type=str, default=None)
 parser.add_argument("--num-workers", type=int, default=16)
 parser.add_argument("--models-per-worker", type=int, default=16)
 parser.add_argument("--num-gen", type=int, default=1000)
-parser.add_argument("--num-evals", type=int, default=5)
+parser.add_argument("--num-evals", type=int, default=1)
 parser.add_argument("--precision", type=int, default=4)
 parser.add_argument("--sigma-init", type=float, default=0.1)
 parser.add_argument("--sigma-decay", type=float, default=0.0001)
@@ -25,19 +24,26 @@ args = parser.parse_args()
 np.random.seed(args.seed)
 
 class Model(Module):
+  # small world model agent
   def __init__(self, obs_size, action_size, hidden_size):
     super().__init__()
     self.obs_size = obs_size
     self.action_size = action_size
     self.hidden_size = hidden_size
-    self.register_module("rnn", LSTM(obs_size, hidden_size))
-    self.register_module("controller", Linear(obs_size + hidden_size, action_size))
+    self.register_module("C", Linear(obs_size + hidden_size, action_size))
+    self.register_module("M", LSTM(obs_size + action_size, hidden_size))
 
-  def __call__(self, obs):
-    h = self.rnn(obs)
-    x = np.concatenate([obs, h])
-    action = self.controller(x)
-    return action
+  def __call__(self, *args, module="C"):
+    if module == "C":
+      obs, h = args
+      x = np.concatenate([obs, h])
+      action = self.C(x)
+      return action
+    if module == "M":
+      obs, action = args
+      x = np.concatenate([obs, action])
+      h = self.M(x)
+      return h
 
 class CartPoleSwingUpEvaluator(Evaluator):
   def _build_env(self):
@@ -48,14 +54,15 @@ class CartPoleSwingUpEvaluator(Evaluator):
 
   def _evaluate_once(self, env, model):
     obs = env.reset()
-    model.rnn.reset()
+    h = model.M.reset()
     rewards = 0
     done = False
     while not done:
-      action = model(obs)
+      action = model(obs, h, module="C")
       obs, reward, done, _ = env.step(action)
+      h = model(obs, action, module="M")
       rewards += reward
-    return reward
+    return rewards
 
 env = CartPoleSwingUpEnv()
 model = Model(5, 1, 16)

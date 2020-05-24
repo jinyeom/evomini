@@ -8,7 +8,7 @@ Reward is also reshaped to be similar to PyBullet/roboschool version
 More difficult, since dt is 0.05 (not 0.01), and only 200 timesteps
 
 NOTE[jinyeom]: modified so that the cart mass, the pendulum mass, the pole's length,
-and the friction coefficient are parameterized and randomly sampled.
+and the friction coefficient can be randomly augmented each time reset() is called.
 """
 
 import logging
@@ -43,7 +43,9 @@ class CartPoleSwingUpEnv(gym.Env):
   _l = 0.6 # pole's length
   _b = 0.1 # friction coefficient
 
-  def __init__(self):
+  def __init__(self, augmented=False):
+    self.augmented = augmented
+
     self.m_c = self._m_c
     self.m_p = self._m_p
     self.l = self._l
@@ -78,10 +80,11 @@ class CartPoleSwingUpEnv(gym.Env):
     return [seed]
 
   def reset(self):
-    self.m_c = self.np_random.uniform(low=0.5, high=1.5) * self._m_c
-    self.m_p = self.np_random.uniform(low=0.5, high=1.5) * self._m_p
-    self.l = self.np_random.uniform(low=0.5, high=1.5) * self._l
-    self.b = self.np_random.uniform(low=0.5, high=1.5) * self._b
+    if self.augmented:
+      self.m_c = self.np_random.uniform(low=0.5, high=1.5) * self._m_c
+      self.m_p = self.np_random.uniform(low=0.5, high=1.5) * self._m_p
+      self.l = self.np_random.uniform(low=0.5, high=1.5) * self._l
+      self.b = self.np_random.uniform(low=0.5, high=1.5) * self._b
 
     self.state = self.np_random.normal(
       loc=np.array([0.0, 0.0, np.pi, 0.0]), 
