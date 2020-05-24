@@ -33,7 +33,7 @@ class Evaluator:
 
   def __len__(self):
     return self.num_workers * self.models_per_worker
-  
+
   def _build_env(self):
     raise NotImplementedError
 
