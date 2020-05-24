@@ -57,7 +57,7 @@ class Evaluator:
         seeds, solutions = data
         fitness = []
         for env, model, seed, solution in zip(envs, models, seeds, solutions):
-          env.seed(seed)
+          env.seed(int(seed))
           model.set_params(solution, precision=self.precision)
           fitness.append(self._evaluate(env, model))
         fitness = np.array(fitness)
@@ -111,7 +111,9 @@ class OpenaiES:
       self.epsilon = np.concatenate([-eps_split, eps_split], axis=0)
     else:
       self.epsilon = np.random.randn(popsize, self.mu.size)
-    return self.mu + self.sigma * self.epsilon
+    env_seeds = np.random.randint(2 ** 31 - 1, size=popsize, dtype=int)
+    solutions = self.mu + self.sigma * self.epsilon
+    return env_seeds, solutions
 
   def step(self, fitness):
     assert self.epsilon is not None

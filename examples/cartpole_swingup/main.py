@@ -81,8 +81,7 @@ with CartPoleSwingUpEvaluator(args.num_workers,
                               args.precision) as evaluator:
   popsize = len(evaluator)
   for gen in range(args.num_gen):
-    seeds = np.random.randint(2 ** 31 - 1, size=popsize).tolist()
-    solutions = es.sample(popsize)
+    seeds, solutions = es.sample(popsize)
     fitness, success = evaluator.evaluate(seeds, solutions)
     assert success, f"evaluation failed at generation {gen}"
     es.step(fitness)
