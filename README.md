@@ -1,13 +1,31 @@
 # evomini
-`evomini` is a neuroevolution framework that consists of minimal implementations of neural network modules and evolutionary algorithms. 
+`evomini` is a neuroevolution framework that consists of minimal implementations of neural network modules and evolutionary algorithms. The primary purpose of this project is to better undertand existing neuroevolution algorithms and help further develop novel algorithms.
 
-## Requirements
-- NumPy
-- _That's it!_
+## Modules
+- [x] Basic modules (Linear, RNN)
+- [x] LSTM (Long Short-Term Memory)
+- [x] ENTM (Evolvable Neural Turing Machine)
 
 ## Algorithms
 - [x] OpenAI-ES (simplified natural evolution strategy)
 - [ ] PGPE (policy gradients with parameter based exploration)
+- [ ] ME-ES (MAP-Elites Evolution Strategy)
+
+If you'd like to use this project for your research, please use the bibtex below to cite this repository:
+```
+@misc{evomini,
+  author = {Yeom, Jin},
+  title = {Minimal implementation of neuroevolution algorithms},
+  year = {2020},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/jinyeom/evomini}},
+}
+```
+
+## Requirements
+- NumPy
+- _That's it!_
 
 ## How to use it
 Using `evomini` consists of four steps:
