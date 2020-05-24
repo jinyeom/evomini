@@ -9,7 +9,7 @@ def softmax(x):
 
 class Module:
   def __init__(self):
-    self._children = {}
+    self._children = []
     self._params = []
 
   @property
@@ -22,11 +22,11 @@ class Module:
   def register_module(self, name, module):
     assert isinstance(module, Module)
     setattr(self, name, module)
-    self._children.update({name: module})
+    self._children.append((name, module))
     self._params.extend(module._params)
 
   def register_param(self, name, shape):
-    param = np.empty(shape)
+    param = np.empty(shape, dtype=np.float16)
     setattr(self, name, param)
     self._params.append(param)
 
@@ -36,7 +36,28 @@ class Module:
       params = np.round(params * 10 ** precision) / 10 ** precision
     for dst in self._params:
       src, params = params[:dst.size], params[dst.size:]
-      np.copyto(dst, np.array(src).reshape(dst.shape))
+      src = np.array(src, dtype=np.float16).reshape(dst.shape)
+      np.copyto(dst, src)
+
+  def reset(self):
+    return None
+
+class Stack(Module):
+  def __init__(self, **kwargs):
+    super().__init__()
+    for name, module in kwargs.items():
+      self.register_module(name, module)
+
+  def reset(self):
+    hiddens = {}
+    for name, module in self._children:
+      hiddens[name] = module.reset()
+    return hiddens
+
+  def __call__(self, x):
+    for _, module in self._children:
+      x = module(x)
+    return x
 
 class Linear(Module):
   def __init__(self, input_size, output_size):
@@ -59,7 +80,7 @@ class RNN(Module):
     self.reset()
 
   def reset(self):
-    self.h = np.zeros(self.hidden_size)
+    self.h = np.zeros(self.hidden_size, dtype=np.float16)
     return np.array(self.h)
 
   def __call__(self, x):
@@ -79,8 +100,8 @@ class LSTM(Module):
     self.reset()
 
   def reset(self):
-    self.h = np.zeros(self.hidden_size)
-    self.c = np.zeros(self.hidden_size)
+    self.h = np.zeros(self.hidden_size, dtype=np.float16)
+    self.c = np.zeros(self.hidden_size, dtype=np.float16)
     return np.array(self.h)
 
   def __call__(self, x):
@@ -110,7 +131,7 @@ class ENTM(Module):
     self.reset()
 
   def reset(self):
-    self.memory = np.zeros((1, self.mem_size))
+    self.memory = np.zeros((1, self.mem_size), dtype=np.float16)
     self.head = 0
     self.M_h = self.memory[self.head]
     return self.controller.reset()
