@@ -16,6 +16,8 @@ Using `evomini` consists of four steps:
 3. Implement `Evaluator`
 4. Start evolution
 
+A full implementation of this example can be found under [examples](https://github.com/jinyeom/evomini/tree/master/examples).
+
 ### 1. Define agent architecture
 First, we must define your agent's architecture using `evomini.nn.Module` and other included modules, such as `Linear`, `RNN`, etc. In this example, we build small end-to-end world model agents ([[Ha and Schmidhuber, 2018](https://arxiv.org/abs/1803.10122)], [[Risi and Stanley, 2019](https://arxiv.org/abs/1906.08857)]).
 
@@ -45,7 +47,7 @@ class Model(Module):
 ```
 
 ### 2. Define environment
-Next, we define our environment. If you have worked with reinforcement learning, this should be a familiar step. In this example, we'll use `CartPoleSwingUpEnv`, which you can find under [examples](https://github.com/jinyeom/evomini/tree/master/examples).
+Next, we define our environment. If you have worked with reinforcement learning, this should be a familiar step. In this example, we'll use `CartPoleSwingUpEnv`, which you can find under [examples/cartpole_swingup](https://github.com/jinyeom/evomini/tree/master/examples/cartpole_swingup).
 
 ```python
 class CartPoleSwingUpEnv(gym.Env):
