@@ -8,7 +8,6 @@
 
 ### Algorithms
 - [x] OpenAI-ES (simplified natural evolution strategy)
-- [ ] PGPE (policy gradients with parameter based exploration)
 - [ ] ME-ES (MAP-Elites Evolution Strategy)
 
 If you'd like to use this project for your research, please use the following bibtex to cite this repository:
@@ -103,12 +102,9 @@ Now that all the components are ready, we can put them together to start our evo
 
 ```python
 # create an evolutionary algorithm instace
-es = OpenaiES(np.zeros(len(Model(5, 1, 16))),
-              sigma_init=sigma_init,
-              sigma_decay=sigma_decay,
-              sigma_limit=sigma_limit,
-              antithetic=antithetic,
-              stepsize=stepsize)
+es = SimpleNES(np.zeros(len(Model(5, 1, 16))),
+               sigma=sigma_init,
+               stepsize=stepsize)
 
 # start evolution
 with CartPoleSwingUpEvaluator(num_workers, models_per_worker, num_evals, precision) as evaluator:
