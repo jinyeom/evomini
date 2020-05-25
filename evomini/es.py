@@ -85,16 +85,12 @@ class Evaluator:
 class OpenaiES:
   def __init__(self, mu_init,
                sigma_init=0.1,
-               sigma_decay=0.0001,
-               sigma_limit=0.01,
                antithetic=True,
                stepsize=0.01,
                beta1=0.99,
                beta2=0.999):
     self.mu = mu_init
     self.sigma = sigma_init
-    self.sigma_decay = sigma_decay
-    self.sigma_limit = sigma_limit
     self.antithetic = antithetic
     self.stepsize = stepsize
     self.beta1 = beta1
@@ -123,9 +119,8 @@ class OpenaiES:
     rank = np.empty_like(fitness, dtype=np.long)
     rank[np.argsort(fitness)] = np.arange(popsize)
     rank = rank.astype(np.float) / (popsize - 1) - 0.5
-    fitness = (rank - np.mean(rank)) / np.std(rank)
-    grad = 1 / (popsize * self.sigma) * (self.epsilon.T @ fitness)
-    self.sigma = max(self.sigma * (1 - self.sigma_decay), self.sigma_limit)
+    rank = (rank - np.mean(rank)) / np.std(rank)
+    grad = 1 / (popsize * self.sigma) * (self.epsilon.T @ rank)
     # gradient ascent with Adam
     self.t += 1
     self.m = self.beta1 * self.m + (1 - self.beta1) * grad
@@ -135,3 +130,24 @@ class OpenaiES:
     ratio = np.linalg.norm(step) / (np.linalg.norm(self.mu) + 1e-8)
     self.mu += step
     return ratio
+
+class PGPE:
+  def __init__(self, mu_init,
+               sigma_init=0.1,
+               sigma_alpha=0.2,
+               stepsize=0.01,
+               beta1=0.99,
+               beta2=0.99):
+    self.mu = mu_init
+    self.sigma = np.full_like(mu_init, sigma_init)
+    self.sigma_alpha = sigma_alpha
+    self.stepsize = stepsize
+    self.beta1 = beta1
+    self.beta2 = beta2
+    self.t = 0
+    self.m = np.zeros_like(self.mu)
+    self.v = np.zeros_like(self.mu)
+    self.epsilon = None
+
+  def sample(self, popsize):
+    
