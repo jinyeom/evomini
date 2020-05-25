@@ -1,23 +1,18 @@
 import argparse
 import numpy as np
-from evomini.es import Evaluator, OpenaiES
+from evomini.es import Evaluator, SimpleNES
 from evomini.nn import Module, Linear, LSTM
 from cartpole_swingup import CartPoleSwingUpEnv
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--artifact-path", type=str, default="artifacts/")
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--num-workers", type=int, default=16)
 parser.add_argument("--models-per-worker", type=int, default=16)
 parser.add_argument("--num-gen", type=int, default=1000)
 parser.add_argument("--num-evals", type=int, default=1)
 parser.add_argument("--precision", type=int, default=4)
-parser.add_argument("--sigma-init", type=float, default=0.1)
-parser.add_argument("--sigma-decay", type=float, default=0.0001)
-parser.add_argument("--sigma-limit", type=float, default=0.01)
-parser.add_argument("--antithetic", type=bool, default=True)
+parser.add_argument("--sigma", type=float, default=0.1)
 parser.add_argument("--stepsize", type=float, default=0.03)
-parser.add_argument("--momentum", type=float, default=0.9)
 parser.add_argument("--eval-interval", type=int, default=50)
 args = parser.parse_args()
 
@@ -67,12 +62,7 @@ class CartPoleSwingUpEvaluator(Evaluator):
 env = CartPoleSwingUpEnv()
 model = Model(5, 1, 16)
 mu_init = np.zeros(len(model))
-es = OpenaiES(mu_init,
-              sigma_init=args.sigma_init,
-              sigma_decay=args.sigma_decay,
-              sigma_limit=args.sigma_limit,
-              antithetic=args.antithetic,
-              stepsize=args.stepsize)
+es = SimpleNES(mu_init, sigma=args.sigma, stepsize=args.stepsize)
 global_best_fitness = -np.inf
 
 with CartPoleSwingUpEvaluator(args.num_workers,

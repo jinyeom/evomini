@@ -82,20 +82,14 @@ class Evaluator:
     _, success = zip(*[pipe.recv() for pipe in self.pipes])
     return all(success)
 
-class OpenaiES:
-  def __init__(self, mu_init,
-               sigma_init=0.1,
-               sigma_decay=0.0001,
-               sigma_limit=0.01,
-               antithetic=True,
+class SimpleNES:
+  def __init__(self, mu, 
+               sigma=0.1,
                stepsize=0.01,
                beta1=0.99,
                beta2=0.999):
-    self.mu = mu_init
-    self.sigma = sigma_init
-    self.sigma_decay = sigma_decay
-    self.sigma_limit = sigma_limit
-    self.antithetic = antithetic
+    self.mu = mu
+    self.sigma = sigma
     self.stepsize = stepsize
     self.beta1 = beta1
     self.beta2 = beta2
@@ -105,12 +99,10 @@ class OpenaiES:
     self.epsilon = None
 
   def sample(self, popsize):
-    if self.antithetic:
-      assert popsize % 2 == 0
-      eps_split = np.random.randn(popsize // 2, self.mu.size)
-      self.epsilon = np.concatenate([-eps_split, eps_split], axis=0)
-    else:
-      self.epsilon = np.random.randn(popsize, self.mu.size)
+    # antithetic/symmetric sampling
+    assert popsize % 2 == 0
+    eps_split = np.random.randn(popsize // 2, self.mu.size)
+    self.epsilon = np.concatenate([eps_split, -eps_split], axis=0)
     env_seeds = np.random.randint(2 ** 31 - 1, size=popsize, dtype=int)
     solutions = self.mu + self.sigma * self.epsilon
     return env_seeds, solutions
@@ -123,9 +115,8 @@ class OpenaiES:
     rank = np.empty_like(fitness, dtype=np.long)
     rank[np.argsort(fitness)] = np.arange(popsize)
     rank = rank.astype(np.float) / (popsize - 1) - 0.5
-    fitness = (rank - np.mean(rank)) / np.std(rank)
-    grad = 1 / (popsize * self.sigma) * (self.epsilon.T @ fitness)
-    self.sigma = max(self.sigma * (1 - self.sigma_decay), self.sigma_limit)
+    rank = (rank - np.mean(rank)) / np.std(rank)
+    grad = 1 / (popsize * self.sigma) * (self.epsilon.T @ rank)
     # gradient ascent with Adam
     self.t += 1
     self.m = self.beta1 * self.m + (1 - self.beta1) * grad

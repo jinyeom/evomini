@@ -119,3 +119,6 @@ with CartPoleSwingUpEvaluator(num_workers, models_per_worker, num_evals, precisi
 
 ## Related projects
 - [estool](https://github.com/hardmaru/estool)
+
+## Todo
+- [ ] Separate optimizer from ES classes
