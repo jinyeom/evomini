@@ -1,5 +1,5 @@
 # evomini
-`evomini` is a neuroevolution framework that consists of minimal implementations of neural network modules and evolutionary algorithms. The primary purpose of this project is to better undertand existing neuroevolution algorithms and help further develop novel algorithms.
+`evomini` is a neuroevolution framework that consists of minimal implementations of neural network modules and evolutionary algorithms. The primary purpose of this project is to better undertand existing neuroevolution algorithms and help further develop novel algorithms. With that said, this framework starts with OpenAI-ES and Deep Neuroevolution (genetic algorithm) as baselines that users can build upon.
 
 ### Modules
 - [x] Basic modules (Linear, RNN)
@@ -7,8 +7,9 @@
 - [x] ENTM (Evolvable Neural Turing Machine)
 
 ### Algorithms
-- [x] OpenAI-ES (simplified natural evolution strategy)
-- [ ] ME-ES (MAP-Elites Evolution Strategy)
+- [x] OpenAI-ES
+- [ ] Deep Neuroevolution
+- [ ] ME-ES
 
 If you'd like to use this project for your research, please use the following bibtex to cite this repository:
 ```
@@ -101,7 +102,7 @@ class CartPoleSwingUpEvaluator(Evaluator):
 Now that all the components are ready, we can put them together to start our evolution.
 
 ```python
-# create an evolutionary algorithm instace
+# create an evolutionary algorithm instance
 es = SimpleNES(np.zeros(len(Model(5, 1, 16))),
                sigma=sigma_init,
                stepsize=stepsize)
