@@ -82,16 +82,14 @@ class Evaluator:
     _, success = zip(*[pipe.recv() for pipe in self.pipes])
     return all(success)
 
-class OpenaiES:
-  def __init__(self, mu_init,
-               sigma_init=0.1,
-               antithetic=True,
+class SimpleNES:
+  def __init__(self, mu, 
+               sigma=0.1,
                stepsize=0.01,
                beta1=0.99,
                beta2=0.999):
-    self.mu = mu_init
-    self.sigma = sigma_init
-    self.antithetic = antithetic
+    self.mu = mu
+    self.sigma = sigma
     self.stepsize = stepsize
     self.beta1 = beta1
     self.beta2 = beta2
@@ -101,12 +99,10 @@ class OpenaiES:
     self.epsilon = None
 
   def sample(self, popsize):
-    if self.antithetic:
-      assert popsize % 2 == 0
-      eps_split = np.random.randn(popsize // 2, self.mu.size)
-      self.epsilon = np.concatenate([-eps_split, eps_split], axis=0)
-    else:
-      self.epsilon = np.random.randn(popsize, self.mu.size)
+    # antithetic/symmetric sampling
+    assert popsize % 2 == 0
+    eps_split = np.random.randn(popsize // 2, self.mu.size)
+    self.epsilon = np.concatenate([eps_split, -eps_split], axis=0)
     env_seeds = np.random.randint(2 ** 31 - 1, size=popsize, dtype=int)
     solutions = self.mu + self.sigma * self.epsilon
     return env_seeds, solutions
@@ -130,24 +126,3 @@ class OpenaiES:
     ratio = np.linalg.norm(step) / (np.linalg.norm(self.mu) + 1e-8)
     self.mu += step
     return ratio
-
-class PGPE:
-  def __init__(self, mu_init,
-               sigma_init=0.1,
-               sigma_alpha=0.2,
-               stepsize=0.01,
-               beta1=0.99,
-               beta2=0.99):
-    self.mu = mu_init
-    self.sigma = np.full_like(mu_init, sigma_init)
-    self.sigma_alpha = sigma_alpha
-    self.stepsize = stepsize
-    self.beta1 = beta1
-    self.beta2 = beta2
-    self.t = 0
-    self.m = np.zeros_like(self.mu)
-    self.v = np.zeros_like(self.mu)
-    self.epsilon = None
-
-  def sample(self, popsize):
-    

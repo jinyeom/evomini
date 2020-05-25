@@ -8,7 +8,6 @@
 
 ### Algorithms
 - [x] OpenAI-ES (simplified natural evolution strategy)
-- [ ] PGPE (policy gradients with parameter based exploration)
 - [ ] ME-ES (MAP-Elites Evolution Strategy)
 
 If you'd like to use this project for your research, please use the following bibtex to cite this repository:
@@ -123,3 +122,6 @@ with CartPoleSwingUpEvaluator(num_workers, models_per_worker, num_evals, precisi
 
 ## Related projects
 - [estool](https://github.com/hardmaru/estool)
+
+## Todo
+- [ ] Separate optimizer from ES classes
