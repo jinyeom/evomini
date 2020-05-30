@@ -1,7 +1,8 @@
 import argparse
 import numpy as np
-from evomini.es import Evaluator, SimpleNES
+from evomini.es import ES
 from evomini.nn import Module, Linear, LSTM
+from evomini.eval import Evaluator
 from cartpole_swingup import CartPoleSwingUpEnv
 
 parser = argparse.ArgumentParser()
@@ -62,7 +63,7 @@ class CartPoleSwingUpEvaluator(Evaluator):
 env = CartPoleSwingUpEnv()
 model = Model(5, 1, 16)
 mu_init = np.zeros(len(model))
-es = SimpleNES(mu_init, sigma=args.sigma, stepsize=args.stepsize)
+es = ES(mu_init, sigma=args.sigma, stepsize=args.stepsize)
 global_best_fitness = -np.inf
 
 with CartPoleSwingUpEvaluator(args.num_workers,

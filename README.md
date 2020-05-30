@@ -1,5 +1,5 @@
 # evomini
-`evomini` is a neuroevolution framework that consists of minimal implementations of neural network modules and evolutionary algorithms. The primary purpose of this project is to better undertand existing neuroevolution algorithms and help further develop novel algorithms. With that said, this framework starts with OpenAI-ES and Deep Neuroevolution (genetic algorithm) as baselines that users can build upon.
+`evomini` is a neuroevolution framework that consists of minimal implementations of neural network modules and evolutionary algorithms. The primary purpose of this project is to better undertand existing neuroevolution algorithms and help further develop novel algorithms. With that said, this framework provides OpenAI-ES and Deep Neuroevolution (genetic algorithm) as baselines that users can build upon.
 
 ### Modules
 - [x] Basic modules (Linear, RNN)
@@ -9,7 +9,6 @@
 ### Algorithms
 - [x] OpenAI-ES
 - [ ] Deep Neuroevolution
-- [ ] ME-ES
 
 If you'd like to use this project for your research, please use the following bibtex to cite this repository:
 ```
@@ -76,7 +75,7 @@ class CartPoleSwingUpEnv(gym.Env):
 Once our agent and environment are defined, we can build our parallel evaluator. All we need to do is implementing three of its methods: `_build_env()`, `_build_model()`, and `_evaluate_once`. Respectively, they build an instance of the environment, build an instance of the agent, and evaluate an agent in an environment to retrieve its fitness value.
 
 ```python
-from evomini.es import Evaluator
+from evomini.eval import Evaluator
 
 class CartPoleSwingUpEvaluator(Evaluator):
   def _build_env(self):
@@ -103,9 +102,7 @@ Now that all the components are ready, we can put them together to start our evo
 
 ```python
 # create an evolutionary algorithm instance
-es = SimpleNES(np.zeros(len(Model(5, 1, 16))),
-               sigma=sigma_init,
-               stepsize=stepsize)
+es = ES(np.zeros(len(Model(5, 1, 16))), sigma=sigma_init, stepsize=stepsize)
 
 # start evolution
 with CartPoleSwingUpEvaluator(num_workers, models_per_worker, num_evals, precision) as evaluator:
