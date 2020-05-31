@@ -8,7 +8,7 @@
 
 ### Algorithms
 - [x] OpenAI-ES
-- [ ] Deep Neuroevolution
+- [x] Deep Neuroevolution
 
 If you'd like to use this project for your research, please use the following bibtex to cite this repository:
 ```
@@ -34,7 +34,7 @@ Using `evomini` consists of four steps:
 3. Implement `Evaluator`
 4. Start evolution
 
-A full implementation of this example can be found under [examples](https://github.com/jinyeom/evomini/tree/master/examples).
+A full implementation of this example can be found under [examples](https://github.com/jinyeom/evomini/tree/master/examples). In this particular example, we'll cover OpenAI-ES; note that `SimpleGA` follows a slightly different pattern.
 
 ### 1. Define agent architecture
 First, we must define your agent's architecture using `evomini.nn.Module` and other included modules, such as `Linear`, `RNN`, etc. In this example, we build small end-to-end world model agents ([[Ha and Schmidhuber, 2018](https://arxiv.org/abs/1803.10122)], [[Risi and Stanley, 2019](https://arxiv.org/abs/1906.08857)]).
