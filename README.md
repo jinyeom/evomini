@@ -102,7 +102,7 @@ Now that all the components are ready, we can put them together to start our evo
 
 ```python
 # create an evolutionary algorithm instance
-es = ES(np.zeros(len(Model(5, 1, 16))), sigma=sigma_init, stepsize=stepsize)
+es = ES(len(Model(5, 1, 16)), sigma=sigma_init, stepsize=stepsize)
 
 # start evolution
 with CartPoleSwingUpEvaluator(num_workers, models_per_worker, num_evals, precision) as evaluator:

@@ -7,6 +7,7 @@ class ES:
                beta1=0.99,
                beta2=0.999):
     self.num_params = num_params
+    self.mu = np.zeros(num_params)
     self.sigma = sigma
     self.stepsize = stepsize
     self.beta1 = beta1
@@ -19,7 +20,7 @@ class ES:
   def sample(self, popsize):
     # antithetic/symmetric sampling
     assert popsize % 2 == 0
-    eps_split = np.random.randn(popsize // 2, self.mu.size)
+    eps_split = np.random.randn(popsize // 2, self.num_params)
     self.epsilon = np.concatenate([eps_split, -eps_split], axis=0)
     env_seeds = np.random.randint(2 ** 31 - 1, size=popsize, dtype=int)
     solutions = self.mu + self.sigma * self.epsilon
