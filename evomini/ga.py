@@ -73,8 +73,3 @@ class SimpleGA:
     env_seeds = np.random.randint(2 ** 31 - 1, size=len(self.population), dtype=int)
     solutions = np.array([ind.genome for ind in self.population])
     return env_seeds, solutions
-
-if __name__ == "__main__":
-  ga = SimpleGA(10)
-  seeds, solutions = ga.sample(20)
-  print(ga.set_elite_candidates(np.random.rand(20)).shape)
