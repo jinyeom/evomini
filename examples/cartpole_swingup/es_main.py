@@ -1,6 +1,6 @@
 import argparse
 import numpy as np
-from evomini.es import ES
+from evomini.es import OpenaiES
 from evomini.nn import Module, Linear, LSTM
 from evomini.eval import Evaluator
 from cartpole_swingup import CartPoleSwingUpEnv
@@ -14,7 +14,6 @@ parser.add_argument("--num-evals", type=int, default=1)
 parser.add_argument("--precision", type=int, default=4)
 parser.add_argument("--sigma", type=float, default=0.1)
 parser.add_argument("--stepsize", type=float, default=0.03)
-parser.add_argument("--eval-interval", type=int, default=50)
 args = parser.parse_args()
 
 np.random.seed(args.seed)
@@ -61,19 +60,16 @@ class CartPoleSwingUpEvaluator(Evaluator):
     return rewards
 
 env = CartPoleSwingUpEnv()
-model = Model(5, 1, 16)
-mu_init = np.zeros(len(model))
-es = ES(mu_init, sigma=args.sigma, stepsize=args.stepsize)
+es = OpenaiES(len(Model(5, 1, 16)), sigma=args.sigma, stepsize=args.stepsize)
 global_best_fitness = -np.inf
 
 with CartPoleSwingUpEvaluator(args.num_workers,
                               args.models_per_worker,
-                              args.num_evals,
                               args.precision) as evaluator:
   popsize = len(evaluator)
   for gen in range(args.num_gen):
     seeds, solutions = es.sample(popsize)
-    fitness, success = evaluator.evaluate(seeds, solutions)
+    fitness, success = evaluator.evaluate(seeds, solutions, args.num_evals)
     assert success, f"evaluation failed at generation {gen}"
     es.step(fitness)
 

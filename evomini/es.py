@@ -1,6 +1,6 @@
 import numpy as np
 
-class ES:
+class OpenaiES:
   def __init__(self, num_params,
                sigma=0.1,
                stepsize=0.01,

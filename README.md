@@ -23,6 +23,7 @@ If you'd like to use this project for your research, please use the following bi
 ```
 
 ## Requirements
+- Python >= 3.7
 - NumPy
 - _That's it!_
 
@@ -102,7 +103,8 @@ Now that all the components are ready, we can put them together to start our evo
 
 ```python
 # create an evolutionary algorithm instance
-es = ES(len(Model(5, 1, 16)), sigma=sigma_init, stepsize=stepsize)
+from evomini.es import OpenaiES
+es = OpenaiES(len(Model(5, 1, 16)), sigma=sigma_init, stepsize=stepsize)
 
 # start evolution
 with CartPoleSwingUpEvaluator(num_workers, models_per_worker, num_evals, precision) as evaluator:

@@ -1,13 +1,13 @@
+import math
 import multiprocessing as mp
+import numpy as np
 
 class Evaluator:
   def __init__(self, num_workers,
                models_per_worker,
-               num_evals,
                precision):
     self.num_workers = num_workers
     self.models_per_worker = models_per_worker
-    self.num_evals = num_evals
     self.precision = precision
 
     self.pipes = []
@@ -41,8 +41,8 @@ class Evaluator:
   def _evaluate_once(self, env, model):
     raise NotImplementedError
 
-  def _evaluate(self, env, model):
-    fitness = [self._evaluate_once(env, model) for _ in range(self.num_evals)]
+  def _evaluate(self, env, model, num_evals):
+    fitness = [self._evaluate_once(env, model) for _ in range(num_evals)]
     return np.mean(fitness)
 
   def _worker(self, rank, pipe, parent_pipe):
@@ -52,12 +52,12 @@ class Evaluator:
     while True:
       command, data = pipe.recv()
       if command == "evaluate":
-        seeds, solutions = data
+        seeds, solutions, num_evals = data
         fitness = []
         for env, model, seed, solution in zip(envs, models, seeds, solutions):
           env.seed(int(seed))
           model.set_params(solution, precision=self.precision)
-          fitness.append(self._evaluate(env, model))
+          fitness.append(self._evaluate(env, model, num_evals))
         fitness = np.array(fitness)
         pipe.send((fitness, True))
       elif command == "close":
@@ -66,12 +66,16 @@ class Evaluator:
       else:
         raise NotImplementedError
 
-  def evaluate(self, seeds, solutions):
-    for i, pipe in enumerate(self.pipes):
+  def evaluate(self, seeds, solutions, num_evals):
+    assert len(seeds) == len(solutions)
+    num_solutions = len(solutions)
+    num_workers = math.ceil(num_solutions / self.num_workers)
+    pipes = self.pipes[:num_workers]
+    for i, pipe in enumerate(pipes):
       start = i * self.models_per_worker
-      end = start + self.models_per_worker
-      pipe.send(("evaluate", (seeds[start:end], solutions[start:end])))
-    fitness, success = zip(*[pipe.recv() for pipe in self.pipes])
+      end = min(start + self.models_per_worker, num_solutions)
+      pipe.send(("evaluate", (seeds[start:end], solutions[start:end], num_evals)))
+    fitness, success = zip(*[pipe.recv() for pipe in pipes])
     return np.concatenate(fitness), all(success)
 
   def close(self):
