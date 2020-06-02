@@ -69,8 +69,8 @@ class Evaluator:
   def evaluate(self, seeds, solutions, num_evals):
     assert len(seeds) == len(solutions)
     num_solutions = len(solutions)
-    num_workers = math.ceil(num_solutions / self.num_workers)
-    pipes = self.pipes[:num_workers]
+    num_workers = math.ceil(num_solutions / self.models_per_worker)
+    pipes = self.pipes[:num_workers] # only use necessary processes
     for i, pipe in enumerate(pipes):
       start = i * self.models_per_worker
       end = min(start + self.models_per_worker, num_solutions)
