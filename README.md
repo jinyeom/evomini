@@ -4,6 +4,7 @@
 ### Modules
 - [x] Basic modules (Linear, RNN)
 - [x] LSTM (Long Short-Term Memory)
+- [x] NPRNN (Neuromodulated Plastic RNN)
 - [x] ENTM (Evolvable Neural Turing Machine)
 
 ### Algorithms
