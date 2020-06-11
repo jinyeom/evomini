@@ -1,7 +1,13 @@
 import numpy as np
 
+def tanh(x):
+  return np.tanh(x)
+
 def sigmoid(x):
   return 1 / (1 + np.exp(-x))
+
+def relu(x):
+  return x * (x > 0)
 
 def softmax(x):
   e_x = np.exp(x - np.max(x))
@@ -41,6 +47,25 @@ class Module:
 
   def reset(self):
     return None
+
+  def __call__(self):
+    raise NotImplementedError
+
+class Tanh(Module):
+  def __call__(self, x):
+    return tanh(x)
+
+class Sigmoid(Module):
+  def __call__(self, x):
+    return sigmoid(x)
+
+class ReLU(Module):
+  def __call__(self, x):
+    return relu(x)
+
+class Softmax(Module):
+  def __call__(self, x):
+    return softmax(x)
 
 class Stack(Module):
   def __init__(self, **kwargs):
