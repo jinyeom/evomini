@@ -1,11 +1,12 @@
+from typing import Tuple
 import numpy as np
 
 class OpenaiES:
-  def __init__(self, num_params,
-               sigma=0.1,
-               stepsize=0.01,
-               beta1=0.99,
-               beta2=0.999):
+  def __init__(self, num_params: int,
+               sigma: float = 0.1,
+               stepsize: float = 0.01,
+               beta1: float = 0.99,
+               beta2: float = 0.999):
     self.num_params = num_params
     self.mu = np.zeros(num_params)
     self.sigma = sigma
@@ -17,7 +18,7 @@ class OpenaiES:
     self.v = np.zeros_like(self.mu)
     self.epsilon = None
 
-  def sample(self, popsize):
+  def sample(self, popsize: int) -> Tuple[np.ndarray, np.ndarray]:
     # antithetic/symmetric sampling
     assert popsize % 2 == 0
     eps_split = np.random.randn(popsize // 2, self.num_params)
@@ -26,7 +27,7 @@ class OpenaiES:
     solutions = self.mu + self.sigma * self.epsilon
     return env_seeds, solutions
 
-  def step(self, fitness):
+  def step(self, fitness: np.ndarray) -> np.ndarray:
     assert self.epsilon is not None
     assert len(fitness.shape) == 1
     popsize = fitness.shape[0]

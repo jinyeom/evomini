@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 import numpy as np
 
 @dataclass
@@ -8,19 +8,19 @@ class Individual:
   fitness: Optional[float] = None
   is_elite: bool = False
 
-  def clone(self, mut_sigma):
+  def clone(self, mut_sigma: float):
     # return a mutated child
     child = Individual(np.array(self.genome))
     child.genome += mut_sigma * np.random.randn(len(child.genome))
     return child
 
 class SimpleGA:
-  def __init__(self, num_params,
-               sigma=0.1,
-               topk=10,
-               trunc_thresh=100,
-               sample_size=2,
-               mut_sigma=0.01):
+  def __init__(self, num_params: int,
+               sigma: float = 0.1,
+               topk: int = 10,
+               trunc_thresh: int = 100,
+               sample_size: int = 2,
+               mut_sigma: float = 0.01):
     self.num_params = num_params
     self.sigma = sigma
     self.topk = topk
@@ -31,13 +31,13 @@ class SimpleGA:
     self.candidates = None
     self.elite = None
 
-  def sample(self, popsize):
+  def sample(self, popsize: int) -> Tuple[np.ndarray, np.ndarray]:
     env_seeds = np.random.randint(2 ** 31 - 1, size=popsize, dtype=int)
     solutions = self.sigma * np.random.randn(popsize, self.num_params)
     self.population = [Individual(genome) for genome in solutions]
     return env_seeds, solutions
 
-  def set_elite_candidates(self, fitness):
+  def set_elite_candidates(self, fitness: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     assert self.population is not None
     for ind, fit in zip(self.population, fitness):
       ind.fitness = fit
@@ -48,7 +48,7 @@ class SimpleGA:
     solutions = np.array([ind.genome for ind in self.candidates])
     return env_seeds, solutions
 
-  def set_elite(self, fitness):
+  def set_elite(self, fitness: np.ndarray) -> np.ndarray:
     assert self.candidates is not None
     # sort the elite candidates by their second fitness values
     self.candidates = [ind for ind, _ in sorted(zip(self.candidates, fitness),
@@ -57,7 +57,7 @@ class SimpleGA:
     self.elite.is_elite = True
     return np.array(self.elite.genome)
 
-  def reproduce(self):
+  def step(self) -> Tuple[np.ndarray, np.ndarray]:
     assert self.elite is not None
     if len(self.population) > self.trunc_thresh - 1:
       del self.population[self.trunc_thresh - 1:]

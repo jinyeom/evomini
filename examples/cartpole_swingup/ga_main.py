@@ -80,7 +80,7 @@ with CartPoleSwingUpEvaluator(args.num_workers,
     assert success, f"topk evaluation failed at generation {gen}"
     elite_solution = ga.set_elite(topk_fitness)
 
-    seeds, solutions = ga.reproduce()
+    seeds, solutions = ga.step()
 
     elite_fitness = np.max(topk_fitness)
     if elite_fitness > global_best_fitness:

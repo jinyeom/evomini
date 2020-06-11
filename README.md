@@ -7,8 +7,8 @@
 - [x] ENTM (Evolvable Neural Turing Machine)
 
 ### Algorithms
-- [x] OpenAI-ES
-- [x] Deep Neuroevolution
+- [x] OpenAI-ES (`OpenaiES`)
+- [x] Deep Neuroevolution (`SimpleGA`)
 
 If you'd like to use this project for your research, please use the following bibtex to cite this repository:
 ```
