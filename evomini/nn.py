@@ -80,15 +80,15 @@ class RNN(Module):
     self.reset()
 
   def reset(self):
-    self.h = np.zeros(self.hidden_size, dtype=np.float16)
-    return np.array(self.h)
+    self._h = np.zeros(self.hidden_size, dtype=np.float16)
+    return np.array(self._h)
 
   def __call__(self, x):
-    xh = np.concatenate([x, self.h])
+    xh = np.concatenate([x, self._h])
     out = xh @ self.W + self.b
     out = (out - np.mean(out)) / np.std(out)
-    self.h = np.tanh(out)
-    return np.array(self.h)
+    self._h = np.tanh(out)
+    return np.array(self._h)
 
 class LSTM(Module):
   def __init__(self, input_size, hidden_size):
@@ -100,12 +100,12 @@ class LSTM(Module):
     self.reset()
 
   def reset(self):
-    self.h = np.zeros(self.hidden_size, dtype=np.float16)
-    self.c = np.zeros(self.hidden_size, dtype=np.float16)
-    return np.array(self.h)
+    self._h = np.zeros(self.hidden_size, dtype=np.float16)
+    self._c = np.zeros(self.hidden_size, dtype=np.float16)
+    return np.array(self._h)
 
   def __call__(self, x):
-    xh = np.concatenate([x, self.h])
+    xh = np.concatenate([x, self._h])
     out = xh @ self.W + self.b
     out = (out - np.mean(out)) / np.std(out)
     out = np.split(out, 4)
@@ -113,9 +113,40 @@ class LSTM(Module):
     i = sigmoid(out[1])
     o = sigmoid(out[2])
     c = np.tanh(out[3])
-    self.c = f * self.c + i * c
-    self.h = o * np.tanh(self.c)
-    return np.array(self.h)
+    self._c = f * self._c + i * c
+    self._h = o * np.tanh(self._c)
+    return np.array(self._h)
+
+class NPRNN(Module):
+  def __init__(self, input_size, hidden_size):
+    super().__init__()
+    self.input_size = input_size
+    self.hidden_size = hidden_size
+    self.register_param("W", (input_size, hidden_size))
+    self.register_param("U", (hidden_size, hidden_size))
+    self.register_param("A", (hidden_size, hidden_size))
+    self.register_param("b", (hidden_size,))
+    self.register_module("modulator", Linear(hidden_size, 1))
+    self.register_module("modfanout", Linear(1, hidden_size))
+    self.reset()
+
+  def reset(self):
+    self._h = np.zeros(self.hidden_size, dtype=np.float16)
+    self._hebb = np.zeros((self.hidden_size, self.hidden_size), dtype=np.float16)
+    return np.array(self._h)
+
+  def __call__(self, x):
+    h0 = self._h
+    z = x @ self.W + self.b
+    U = self.U + self.A * self.hebb
+    out = z + self._h @ U
+    out = (out - np.mean(out)) / np.std(out)
+    h1 = np.tanh(out)
+    M = np.tanh(self.modulator(h1))
+    M = self.modfanout(M)[:, np.newaxis]
+    self._hebb += M * np.outer(h0, h1)
+    self._h = h1
+    return np.array(self._h)
 
 class ENTM(Module):
   def __init__(self, input_size, hidden_size, mem_size):
@@ -131,43 +162,43 @@ class ENTM(Module):
     self.reset()
 
   def reset(self):
-    self.memory = np.zeros((1, self.mem_size), dtype=np.float16)
-    self.head = 0
-    self.M_h = self.memory[self.head]
+    self._memory = np.zeros((1, self.mem_size), dtype=np.float16)
+    self._head = 0
+    self._M_h = self._memory[self._head]
     return self.controller.reset()
 
   def _write(self, h):
     a = self.write_vec(h)
     w = sigmoid(self.write_interp(h))
-    M_h = (1 - w) * self.M_h + w * a
-    self.memory[self.head] = M_h
+    M_h = (1 - w) * self._M_h + w * a
+    self._memory[self._head] = M_h
     return a, w
 
   def _content_jump(self, h, a):
     j = sigmoid(self.content_jump(h))
     if j > 0.5:
-      dist = np.sqrt(np.sum((self.memory - a) ** 2, axis=1))
-      self.head = int(np.argmin(dist))
+      dist = np.sqrt(np.sum((self._memory - a) ** 2, axis=1))
+      self._head = int(np.argmin(dist))
     return j
 
   def _shift(self, h):
     s = softmax(self.shift(h))
-    self.head += np.argmax(s) - 1
-    if self.head < 0:
+    self._head += np.argmax(s) - 1
+    if self._head < 0:
       mem_ext = np.zeros((1, self.mem_size,))
-      self.memory = np.concatenate([mem_ext, self.memory], axis=0)
-      self.head = 0
-    elif self.head >= self.memory.shape[0]:
+      self._memory = np.concatenate([mem_ext, self._memory], axis=0)
+      self._head = 0
+    elif self._head >= self._memory.shape[0]:
       mem_ext = np.zeros((1, self.mem_size,))
-      self.memory = np.concatenate([self.memory, mem_ext], axis=0)
+      self._memory = np.concatenate([self._memory, mem_ext], axis=0)
     return s
 
   def _read(self):
-    self.M_h = self.memory[self.head]
-    return np.array(self.M_h)
+    self._M_h = self._memory[self._head]
+    return np.array(self._M_h)
 
   def __call__(self, x):
-    x = np.concatenate([x, self.M_h])
+    x = np.concatenate([x, self._M_h])
     h = self.controller(x)
     a, w = self._write(h)
     j = self._content_jump(h, a)
